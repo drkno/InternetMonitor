@@ -11,8 +11,8 @@
 <script>
 	const monitorApp = angular.module("monitorApp", ['chart.js']);
 	monitorApp.controller("MonitorCtrl", function($scope, $http) {
-		$scope.speedData = [[],[],[]];
-		$scope.speedSeries = ['Download', 'Upload', 'Ping'];
+		$scope.speedData = [[],[]];
+		$scope.speedSeries = ['Download', 'Upload'];
 		$scope.speedLabels = [];
 
 		$scope.avDownload = 0;
@@ -33,19 +33,19 @@
 		$http.get('/api/v1/speed').then(function(response) {
 			$scope.speedData = [
 				response.data.data.map(d => d.download),
-				response.data.data.map(d => d.upload),
-				response.data.data.map(d => d.ping)
+				response.data.data.map(d => d.upload)
 			];
+			const ping = response.data.data.map(d => d.ping);
 			$scope.speedLabels = response.data.data.map(d => `${d.recorded} (Server ${d.serverId})`);
 			$scope.avDownload = average($scope.speedData[0]).toFixed(2);
 			$scope.avUpload = average($scope.speedData[1]).toFixed(2);
-			$scope.avPing = average($scope.speedData[2]).toFixed(2);
+			$scope.avPing = average(ping).toFixed(2);
 			$scope.maxDownload = Math.max.apply(null, $scope.speedData[0]).toFixed(2);
 			$scope.maxUpload = Math.max.apply(null, $scope.speedData[1]).toFixed(2);
-			$scope.maxPing = Math.max.apply(null, $scope.speedData[2]).toFixed(2);
+			$scope.maxPing = Math.max.apply(null, ping).toFixed(2);
 			$scope.minDownload = Math.min.apply(null, $scope.speedData[0]).toFixed(2);
 			$scope.minUpload = Math.min.apply(null, $scope.speedData[1]).toFixed(2);
-			$scope.minPing = Math.min.apply(null, $scope.speedData[2]).toFixed(2);
+			$scope.minPing = Math.min.apply(null, ping).toFixed(2);
 		});
 
 		$scope.onlineData = [];
