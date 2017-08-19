@@ -23,7 +23,8 @@ const speedTestDb = new Database(
 );
 const speedMonitor = new SpeedMonitor(
 	Config.ensure(300000, 'speedTestInterval'),
-	Config.ensure(60000, 'speedTestMaxTime')
+	Config.ensure(60000, 'speedTestMaxTime'),
+	Config.ensure(void(0), 'speedTestServerId')
 );
 speedMonitor.on('speed', details => {
 	speedTestDb.insert(details);

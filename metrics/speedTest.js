@@ -2,10 +2,11 @@ const EventEmitter = require('events');
 const speedTest = require('speedtest-net');
 
 class SpeedMonitor extends EventEmitter {
-	constructor(checkInterval, maxTime = 60000) {
+	constructor(checkInterval, maxTime, serverId) {
 		super();
 		this._checkInterval = checkInterval;
 		this._maxTime = maxTime;
+		this._serverId = serverId;
 	}
 
 	start() {
@@ -25,7 +26,7 @@ class SpeedMonitor extends EventEmitter {
 	}
 
 	async _runCheck() {
-		const test = speedTest({maxTime: this._maxTime});
+		const test = speedTest({maxTime: this._maxTime, serverId: this._serverId});
 		const time = new Date();
 		test.on('data', data => {
 			this.emit('speed', {
