@@ -1,0 +1,117 @@
+<!doctype html>
+<html ng-app="monitorApp">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Internet Monitoring</title>
+<link rel="stylesheet" href="./node_modules/bootstrap/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="./node_modules/bootstrap/dist/css/bootstrap-theme.min.css">
+<script	src="./node_modules/angular/angular.min.js"></script>
+<script	src="./node_modules/angular-chart.js/node_modules/chart.js/dist/Chart.bundle.min.js"></script>
+<script	src="./node_modules/angular-chart.js/dist/angular-chart.min.js"></script>
+<script>
+	const monitorApp = angular.module("monitorApp", ['chart.js']);
+	monitorApp.controller("MonitorCtrl", function($scope, $http) {
+		$scope.speedData = [[],[],[]];
+		$scope.speedSeries = ['Download', 'Upload', 'Ping'];
+		$scope.speedLabels = [];
+
+		$scope.avDownload = 0;
+		$scope.avUpload = 0;
+		$scope.avPing = 0;
+		$scope.maxDownload = 0;
+		$scope.maxUpload = 0;
+		$scope.maxPing = 0;
+		$scope.minDownload = 0;
+		$scope.minUpload = 0;
+		$scope.minPing = 0;
+
+		const average = data => {
+			const total = data.reduce((sum, x) => sum + x);
+			return total / data.length;
+		};
+
+		$http.get('/api/v1/speed').then(function(response) {
+			$scope.speedData = [
+				response.data.data.map(d => d.download),
+				response.data.data.map(d => d.upload),
+				response.data.data.map(d => d.ping)
+			];
+			$scope.speedLabels = response.data.data.map(d => `${d.recorded} (Server ${d.serverId})`);
+			$scope.avDownload = average($scope.speedData[0]).toFixed(2);
+			$scope.avUpload = average($scope.speedData[1]).toFixed(2);
+			$scope.avPing = average($scope.speedData[2]).toFixed(2);
+			$scope.maxDownload = Math.max.apply(null, $scope.speedData[0]).toFixed(2);
+			$scope.maxUpload = Math.max.apply(null, $scope.speedData[1]).toFixed(2);
+			$scope.maxPing = Math.max.apply(null, $scope.speedData[2]).toFixed(2);
+			$scope.minDownload = Math.min.apply(null, $scope.speedData[0]).toFixed(2);
+			$scope.minUpload = Math.min.apply(null, $scope.speedData[1]).toFixed(2);
+			$scope.minPing = Math.min.apply(null, $scope.speedData[2]).toFixed(2);
+		});
+
+		$scope.onlineData = [];
+		$http.get('/api/v1/online').then(function(response) {
+			$scope.onlineData = response.data.data;
+		});
+
+		$scope.toDuration = (start, end) => {
+			start = new Date(start);
+			end = new Date(end);
+			const diff = (end - start) / 1000;
+			return diff + ' seconds';
+		};
+	});
+</script>
+</head>
+<body ng-controller="MonitorCtrl">
+	<div class="container">
+		<h3>Speed</h3>
+		<br />
+		<canvas class="chart chart-line" chart-data="speedData" chart-labels="speedLabels" chart-series="speedSeries"></canvas>
+
+		<table class="table table-responsive">
+			<tr>
+				<th></th>
+				<th>Download</th>
+				<th>Upload</th>
+				<th>Ping</th>
+			</tr>
+			<tr>
+				<th>Average</th>
+				<td>{{avDownload}} Mbps</td>
+				<td>{{avUpload}} Mbps</td>
+				<td>{{avPing}} ms</td>
+			</tr>
+			<tr>
+				<th>Best</th>
+				<td>{{maxDownload}} Mbps</td>
+				<td>{{maxUpload}} Mbps</td>
+				<td>{{minPing}} ms</td>
+			</tr>
+			<tr>
+				<th>Worst</th>
+				<td>{{minDownload}} Mbps</td>
+				<td>{{minUpload}} Mbps</td>
+				<td>{{maxPing}} ms</td>
+			</tr>
+		</table>
+
+		<h3>Internet Outages</h3>
+		<table class="table table-responsive table-striped">
+			<thead>
+				<tr>
+					<th>Start</th>
+					<th>End</th>
+					<th>Duration</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr ng-repeat="outage in onlineData">
+					<td>{{outage.start}}</td>
+					<td>{{outage.end}}</td>
+					<td>{{toDuration(outage.start, outage.end)}}</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</body>
+</html>
