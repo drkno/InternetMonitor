@@ -19,6 +19,7 @@ class Database {
 	}
 
 	_rotate () {
+		console.log(`Rotating database ${this._filename}.`);
 		try {
 			delete this._db;
 			if (fs.statSync(this._filename).isFile()) {
@@ -34,6 +35,7 @@ class Database {
 	}
 
 	insert (document) {
+		console.log(`Inserting new document into ${this._filename}.`);
 		this._db.insert(document);
 	}
 

@@ -13,7 +13,6 @@ const onlineMonitor = new OnlineMonitor(
 	Config.ensure(500, 'onlineCheckTimeout')
 );
 onlineMonitor.on('outage', details => {
-	console.log(details);
 	onlineCheckDb.insert(details);
 });
 
@@ -38,6 +37,8 @@ const server = new Server(
 );
 
 process.on('exit', () => {
+	console.log('Shutting down.');
+
 	server.stop();
 
 	onlineMonitor.stop();

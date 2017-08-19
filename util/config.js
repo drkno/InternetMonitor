@@ -27,6 +27,7 @@ class Config {
 			}
 			curr = curr[name];
 		}
+		console.log(`Getting config for ${names.join('.')} = (${typeof(curr)}) ${JSON.stringify(curr)}`);
 		return curr;
 	}
 }

@@ -38,6 +38,7 @@ class Server {
 	}
 
 	start () {
+		console.log(`Starting server on port ${this._port}.`);
 		this._server = this._app.listen(this._port, () => {});
 	}
 
