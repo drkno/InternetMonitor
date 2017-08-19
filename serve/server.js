@@ -17,6 +17,9 @@ class Server {
 
 	_speedApi (req, res) {
 		this._speedDb.find({}, (e, doc) => {
+			if (doc) {
+				doc.sort((a,b) => b.recorded - a.recorded);
+			}
 			const result = {
 				success: !e,
 				data: e || doc
@@ -28,6 +31,10 @@ class Server {
 
 	_onlineApi (req, res) {
 		this._onlineDb.find({}, (e, doc) => {
+			if (doc) {
+				doc = doc.filter(r => r.end - r.start > 1000);
+				doc.sort((a,b) => b.start - a.start);
+			}
 			const result = {
 				success: !e,
 				data: e || doc

@@ -14,6 +14,13 @@ const onlineMonitor = new OnlineMonitor(
 );
 onlineMonitor.on('outage', details => {
 	onlineCheckDb.insert(details);
+	speedTestDb.insert({
+		recorded: new Date(details.start.getTime() + (details.end - details.start)/2),
+		download: 0,
+		upload: 0,
+		ping: 0,
+		serverId: -1
+	});
 });
 
 const speedTestDb = new Database(

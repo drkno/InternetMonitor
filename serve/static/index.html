@@ -44,18 +44,23 @@
 					response.data.data.map(d => d.download),
 					response.data.data.map(d => d.upload)
 				];
-				const ping = response.data.data.map(d => d.ping);
+				$scope.ping = [response.data.data.map(d => d.ping)];
 				$scope.speedLabels = response.data.data.map(d => `${d.recorded} (Server ${d.serverId})`);
-				$scope.avDownload = average($scope.speedData[0]).toFixed(2);
-				$scope.avUpload = average($scope.speedData[1]).toFixed(2);
-				$scope.avPing = average(ping).toFixed(2);
-				$scope.maxDownload = Math.max.apply(null, $scope.speedData[0]).toFixed(2);
-				$scope.maxUpload = Math.max.apply(null, $scope.speedData[1]).toFixed(2);
-				$scope.maxPing = Math.max.apply(null, ping).toFixed(2);
-				$scope.minDownload = Math.min.apply(null, $scope.speedData[0]).toFixed(2);
-				$scope.minUpload = Math.min.apply(null, $scope.speedData[1]).toFixed(2);
-				$scope.minPing = Math.min.apply(null, ping).toFixed(2);
-				$scope.ping = [ping];
+				
+				// remove internet disconnects from stats
+				const downf = response.data.data.filter(d => d.serverId != -1).map(d => d.download);
+				const upf = response.data.data.filter(d => d.serverId != -1).map(d => d.upload);
+				const pingf = response.data.data.filter(d => d.serverId != -1).map(d => d.ping);
+				
+				$scope.avDownload = average(downf).toFixed(2);
+				$scope.avUpload = average(upf).toFixed(2);
+				$scope.avPing = average(pingf).toFixed(2);
+				$scope.maxDownload = Math.max.apply(null, downf).toFixed(2);
+				$scope.maxUpload = Math.max.apply(null, upf).toFixed(2);
+				$scope.maxPing = Math.max.apply(null, pingf).toFixed(2);
+				$scope.minDownload = Math.min.apply(null, downf).toFixed(2);
+				$scope.minUpload = Math.min.apply(null, upf).toFixed(2);
+				$scope.minPing = Math.min.apply(null, pingf).toFixed(2);
 			});
 			
 			$http.get('/api/v1/online').then(function(response) {
@@ -152,6 +157,8 @@
 		<canvas class="chart chart-line" chart-data="ping" chart-labels="speedLabels" chart-series="['Ping']" chart-colors="speedColours"></canvas>
 		<br />
 		<button type="button" class="btn btn-primary btn-md" ng-click="reloadData()">Update Data</button>
+		<br />
+		<br />
 	</div>
 </body>
 </html>

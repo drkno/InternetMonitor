@@ -44,7 +44,9 @@ class OnlineMonitor extends EventEmitter {
 				start: this.outageStarted,
 				end: new Date()
 			};
-			this.emit('outage', outageEvent);
+			if (outageEvent.end - outageEvent.start > 1000) {
+				this.emit('outage', outageEvent);
+			}
 			this.last = true;
 			this.outageStarted = null;
 		}
