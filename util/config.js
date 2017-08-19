@@ -1,9 +1,10 @@
 const fs = require('fs');
+const path = require('path');
 
 class Config {
 	constructor (file) {
 		try {
-			const data = fs.readFileSync(file, 'utf8').toString().replace(/^\uFEFF/, '');
+			const data = fs.readFileSync(path.resolve(file), 'utf8').toString().replace(/^\uFEFF/, '');
 			this._configData = JSON.parse(data);
 		}
 		catch(e) {
@@ -32,4 +33,4 @@ class Config {
 	}
 }
 
-module.exports = new Config('./../config.json');
+module.exports = new Config('./config.json');
