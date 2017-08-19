@@ -14,6 +14,8 @@
 		$scope.speedData = [[],[]];
 		$scope.speedSeries = ['Download', 'Upload'];
 		$scope.speedLabels = [];
+		$scope.speedColours = ['#FF9933', '#FF0000'];
+		$scope.ping;
 
 		$scope.avDownload = 0;
 		$scope.avUpload = 0;
@@ -25,40 +27,70 @@
 		$scope.minUpload = 0;
 		$scope.minPing = 0;
 
+		$scope.onlineData = [];
+		
 		const average = data => {
 			const total = data.reduce((sum, x) => sum + x);
 			return total / data.length;
 		};
 
-		$http.get('/api/v1/speed').then(function(response) {
-			$scope.speedData = [
-				response.data.data.map(d => d.download),
-				response.data.data.map(d => d.upload)
-			];
-			const ping = response.data.data.map(d => d.ping);
-			$scope.speedLabels = response.data.data.map(d => `${d.recorded} (Server ${d.serverId})`);
-			$scope.avDownload = average($scope.speedData[0]).toFixed(2);
-			$scope.avUpload = average($scope.speedData[1]).toFixed(2);
-			$scope.avPing = average(ping).toFixed(2);
-			$scope.maxDownload = Math.max.apply(null, $scope.speedData[0]).toFixed(2);
-			$scope.maxUpload = Math.max.apply(null, $scope.speedData[1]).toFixed(2);
-			$scope.maxPing = Math.max.apply(null, ping).toFixed(2);
-			$scope.minDownload = Math.min.apply(null, $scope.speedData[0]).toFixed(2);
-			$scope.minUpload = Math.min.apply(null, $scope.speedData[1]).toFixed(2);
-			$scope.minPing = Math.min.apply(null, ping).toFixed(2);
-		});
-
-		$scope.onlineData = [];
-		$http.get('/api/v1/online').then(function(response) {
-			$scope.onlineData = response.data.data;
-		});
+		$scope.pingIsInGraph = () => {
+			return $scope.speedSeries.length === 3;
+		};
+			
+		$scope.reloadData = () => {
+			$http.get('/api/v1/speed').then(function(response) {
+				$scope.speedData = [
+					response.data.data.map(d => d.download),
+					response.data.data.map(d => d.upload)
+				];
+				const ping = response.data.data.map(d => d.ping);
+				$scope.speedLabels = response.data.data.map(d => `${d.recorded} (Server ${d.serverId})`);
+				$scope.avDownload = average($scope.speedData[0]).toFixed(2);
+				$scope.avUpload = average($scope.speedData[1]).toFixed(2);
+				$scope.avPing = average(ping).toFixed(2);
+				$scope.maxDownload = Math.max.apply(null, $scope.speedData[0]).toFixed(2);
+				$scope.maxUpload = Math.max.apply(null, $scope.speedData[1]).toFixed(2);
+				$scope.maxPing = Math.max.apply(null, ping).toFixed(2);
+				$scope.minDownload = Math.min.apply(null, $scope.speedData[0]).toFixed(2);
+				$scope.minUpload = Math.min.apply(null, $scope.speedData[1]).toFixed(2);
+				$scope.minPing = Math.min.apply(null, ping).toFixed(2);
+				$scope.ping = [ping];
+			});
+			
+			$http.get('/api/v1/online').then(function(response) {
+				$scope.onlineData = response.data.data;
+			});
+		};
 
 		$scope.toDuration = (start, end) => {
+			const pluralise = (name, value) => value + ' ' + (value > 1 || value < 1 ? name + 's' : name) + ' ';
+			
 			start = new Date(start);
 			end = new Date(end);
-			const diff = (end - start) / 1000;
-			return diff + ' seconds';
+			let diff = end - start;
+			let result = '';
+			
+			const hours = Math.floor(diff / 3600000);
+			if (hours > 0) {
+				result += pluralise('hour', hours);
+				diff = diff % 3600000;
+			}
+			
+			const mins = Math.floor(diff / 60000);
+			if (mins > 0) {
+				result += pluralise('min', mins);
+				diff = diff % 60000;
+			}
+			
+			const seconds = diff / 1000;
+			if (seconds > 0) {
+				result += pluralise('second', mins);
+			}
+			return result;
 		};
+		
+		$scope.reloadData();
 	});
 </script>
 </head>
@@ -66,7 +98,7 @@
 	<div class="container">
 		<h3>Speed</h3>
 		<br />
-		<canvas class="chart chart-line" chart-data="speedData" chart-labels="speedLabels" chart-series="speedSeries"></canvas>
+		<canvas class="chart chart-line" chart-data="speedData" chart-labels="speedLabels" chart-series="speedSeries" chart-colors="speedColours"></canvas>
 
 		<table class="table table-responsive">
 			<tr>
@@ -94,7 +126,7 @@
 				<td>{{maxPing}} ms</td>
 			</tr>
 		</table>
-
+		<br />
 		<h3>Internet Outages</h3>
 		<table class="table table-responsive table-striped">
 			<thead>
@@ -112,6 +144,14 @@
 				</tr>
 			</tbody>
 		</table>
+		
+		<br />
+		<h3>Ping</h3>
+		<i>Note: depending on the device this is running on these times might be meaningless.</i>
+		<br />
+		<canvas class="chart chart-line" chart-data="ping" chart-labels="speedLabels" chart-series="['Ping']" chart-colors="speedColours"></canvas>
+		<br />
+		<button type="button" class="btn btn-primary btn-md" ng-click="reloadData()">Update Data</button>
 	</div>
 </body>
 </html>
