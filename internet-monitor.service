@@ -1,0 +1,14 @@
+[Unit]
+Description=InternetMonitor
+
+[Service]
+ExecStart=/usr/bin/node /opt/InternetMonitor/main.js
+WorkingDirectory=/opt/InternetMonitor
+Restart=always
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+User=REPLACEUSER
+
+[Install]
+WantedBy=multi-user.target
