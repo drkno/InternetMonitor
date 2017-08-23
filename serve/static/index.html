@@ -1,164 +1,79 @@
 <!doctype html>
 <html ng-app="monitorApp">
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<title>Internet Monitoring</title>
-<link rel="stylesheet" href="./node_modules/bootstrap/dist/css/bootstrap.min.css">
-<link rel="stylesheet" href="./node_modules/bootstrap/dist/css/bootstrap-theme.min.css">
-<script	src="./node_modules/angular/angular.min.js"></script>
-<script	src="./node_modules/angular-chart.js/node_modules/chart.js/dist/Chart.bundle.min.js"></script>
-<script	src="./node_modules/angular-chart.js/dist/angular-chart.min.js"></script>
-<script>
-	const monitorApp = angular.module("monitorApp", ['chart.js']);
-	monitorApp.controller("MonitorCtrl", function($scope, $http) {
-		$scope.speedData = [[],[]];
-		$scope.speedSeries = ['Download', 'Upload'];
-		$scope.speedLabels = [];
-		$scope.speedColours = ['#FF9933', '#FF0000'];
-		$scope.ping;
-
-		$scope.avDownload = 0;
-		$scope.avUpload = 0;
-		$scope.avPing = 0;
-		$scope.maxDownload = 0;
-		$scope.maxUpload = 0;
-		$scope.maxPing = 0;
-		$scope.minDownload = 0;
-		$scope.minUpload = 0;
-		$scope.minPing = 0;
-
-		$scope.onlineData = [];
-		
-		const average = data => {
-			const total = data.reduce((sum, x) => sum + x);
-			return total / data.length;
-		};
-
-		$scope.pingIsInGraph = () => {
-			return $scope.speedSeries.length === 3;
-		};
-			
-		$scope.reloadData = () => {
-			$http.get('/api/v1/speed').then(function(response) {
-				$scope.speedData = [
-					response.data.data.map(d => d.download),
-					response.data.data.map(d => d.upload)
-				];
-				$scope.ping = [response.data.data.map(d => d.ping)];
-				$scope.speedLabels = response.data.data.map(d => `${d.recorded} (Server ${d.serverId})`);
-				
-				// remove internet disconnects from stats
-				const downf = response.data.data.filter(d => d.serverId != -1).map(d => d.download);
-				const upf = response.data.data.filter(d => d.serverId != -1).map(d => d.upload);
-				const pingf = response.data.data.filter(d => d.serverId != -1).map(d => d.ping);
-				
-				$scope.avDownload = average(downf).toFixed(2);
-				$scope.avUpload = average(upf).toFixed(2);
-				$scope.avPing = average(pingf).toFixed(2);
-				$scope.maxDownload = Math.max.apply(null, downf).toFixed(2);
-				$scope.maxUpload = Math.max.apply(null, upf).toFixed(2);
-				$scope.maxPing = Math.max.apply(null, pingf).toFixed(2);
-				$scope.minDownload = Math.min.apply(null, downf).toFixed(2);
-				$scope.minUpload = Math.min.apply(null, upf).toFixed(2);
-				$scope.minPing = Math.min.apply(null, pingf).toFixed(2);
-			});
-			
-			$http.get('/api/v1/online').then(function(response) {
-				$scope.onlineData = response.data.data;
-			});
-		};
-
-		$scope.toDuration = (start, end) => {
-			const pluralise = (name, value) => value + ' ' + (value > 1 || value < 1 ? name + 's' : name) + ' ';
-			
-			start = new Date(start);
-			end = new Date(end);
-			let diff = end - start;
-			let result = '';
-			
-			const hours = Math.floor(diff / 3600000);
-			if (hours > 0) {
-				result += pluralise('hour', hours);
-				diff = diff % 3600000;
-			}
-			
-			const mins = Math.floor(diff / 60000);
-			if (mins > 0) {
-				result += pluralise('min', mins);
-				diff = diff % 60000;
-			}
-			
-			const seconds = diff / 1000;
-			if (seconds > 0) {
-				result += pluralise('second', seconds);
-			}
-			return result;
-		};
-		
-		$scope.reloadData();
-	});
-</script>
-</head>
-<body ng-controller="MonitorCtrl">
-	<div class="container">
-		<h3>Speed</h3>
-		<br />
-		<canvas class="chart chart-line" chart-data="speedData" chart-labels="speedLabels" chart-series="speedSeries" chart-colors="speedColours"></canvas>
-
-		<table class="table table-responsive">
-			<tr>
-				<th></th>
-				<th>Download</th>
-				<th>Upload</th>
-				<th>Ping</th>
-			</tr>
-			<tr>
-				<th>Average</th>
-				<td>{{avDownload}} Mbps</td>
-				<td>{{avUpload}} Mbps</td>
-				<td>{{avPing}} ms</td>
-			</tr>
-			<tr>
-				<th>Best</th>
-				<td>{{maxDownload}} Mbps</td>
-				<td>{{maxUpload}} Mbps</td>
-				<td>{{minPing}} ms</td>
-			</tr>
-			<tr>
-				<th>Worst</th>
-				<td>{{minDownload}} Mbps</td>
-				<td>{{minUpload}} Mbps</td>
-				<td>{{maxPing}} ms</td>
-			</tr>
-		</table>
-		<br />
-		<h3>Internet Outages</h3>
-		<table class="table table-responsive table-striped">
-			<thead>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+		<title>Internet Monitoring</title>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" crossorigin="anonymous">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" crossorigin="anonymous">
+		<script	src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.5/angular.min.js"></script>
+		<script	src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.bundle.min.js"></script>
+		<script	src="https://cdnjs.cloudflare.com/ajax/libs/angular-chart.js/1.1.1/angular-chart.min.js"></script>
+		<script	src="./controller.js"></script>
+	</head>
+	<body ng-controller="MonitorCtrl">
+		<div class="container">
+			<h3>Speed</h3>
+			<br />
+			<div style="height:600px;width:100%;text-align:center">
+				<canvas style="display:inline-block" class="chart chart-line" chart-data="speedData" chart-labels="speedLabels" chart-series="speedSeries" chart-colors="speedColours" chart-options="options"></canvas>
+			</div>
+			<table class="table table-responsive">
 				<tr>
-					<th>Start</th>
-					<th>End</th>
-					<th>Duration</th>
+					<th></th>
+					<th>Download</th>
+					<th>Upload</th>
+					<th>Ping</th>
 				</tr>
-			</thead>
-			<tbody>
-				<tr ng-repeat="outage in onlineData">
-					<td>{{outage.start}}</td>
-					<td>{{outage.end}}</td>
-					<td>{{toDuration(outage.start, outage.end)}}</td>
+				<tr>
+					<th>Average</th>
+					<td>{{avDownload}} Mbps</td>
+					<td>{{avUpload}} Mbps</td>
+					<td>{{avPing}} ms</td>
 				</tr>
-			</tbody>
-		</table>
-		
-		<br />
-		<h3>Ping</h3>
-		<i>Note: depending on the device this is running on these times might be meaningless.</i>
-		<br />
-		<canvas class="chart chart-line" chart-data="ping" chart-labels="speedLabels" chart-series="['Ping']" chart-colors="speedColours"></canvas>
-		<br />
-		<button type="button" class="btn btn-primary btn-md" ng-click="reloadData()">Update Data</button>
-		<br />
-		<br />
-	</div>
-</body>
+				<tr>
+					<th>Best</th>
+					<td>{{maxDownload}} Mbps</td>
+					<td>{{maxUpload}} Mbps</td>
+					<td>{{minPing}} ms</td>
+				</tr>
+				<tr>
+					<th>Worst</th>
+					<td>{{minDownload}} Mbps</td>
+					<td>{{minUpload}} Mbps</td>
+					<td>{{maxPing}} ms</td>
+				</tr>
+			</table>
+			<br />
+			<h3>Internet Outages</h3>
+			<i ng-hide="onlineData.length == 0">Maximum of <span style="color:red">{{onlineWindow.max.count}}</span> outage{{onlineWindow.max.count != 1 ? 's' : ''}} per 24 hours between
+				<span style="color:red">{{formatDateTime(onlineWindow.max.start)}}</span> and <span style="color:red">{{formatDateTime(onlineWindow.max.end)}}</span>
+				 (average of <span style="color:red">{{onlineWindow.averageCount}}</span>).</i>
+			<table class="table table-responsive table-striped">
+				<thead>
+					<tr>
+						<th>Start</th>
+						<th>End</th>
+						<th>Duration</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr ng-repeat="outage in onlineData">
+						<td>{{formatDateTime(outage.start)}}</td>
+						<td>{{formatDateTime(outage.end)}}</td>
+						<td>{{toDuration(outage.start, outage.end)}}</td>
+					</tr>
+				</tbody>
+			</table>
+
+			<br />
+			<h3>Ping</h3>
+			<i>Note: depending on the device this is running on these times might be meaningless.</i>
+			<br />
+			<canvas class="chart chart-line" chart-data="pingData" chart-labels="speedLabels" chart-series="['Ping']" chart-colors="speedColours" chart-options="options"></canvas>
+			<br />
+			<button type="button" class="btn btn-primary btn-md" ng-click="reloadData()">Update Data</button>
+			<br />
+			<br />
+		</div>
+	</body>
 </html>

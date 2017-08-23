@@ -18,7 +18,7 @@ class Server {
 	_speedApi (req, res) {
 		this._speedDb.find({}, (e, doc) => {
 			if (doc) {
-				doc.sort((a,b) => b.recorded - a.recorded);
+				doc.sort((a,b) => a.recorded - b.recorded);
 			}
 			const result = {
 				success: !e,
