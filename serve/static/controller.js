@@ -72,8 +72,8 @@ monitorApp.controller("MonitorCtrl", function($scope, $http) {
 
             if (res.max.count < count) {
                 res.max.count = count;
-                res.start = start;
-                res.end = end;
+                res.max.start = start;
+                res.max.end = end;
             }
 
             if (j === data.length - 1) {
