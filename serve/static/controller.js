@@ -46,9 +46,10 @@ monitorApp.controller("MonitorCtrl", function($scope, $http) {
     };
 
     const calc24HourSlidingWindow = data => {
+        const millisPerDay = 86400000;
         const res = {
             max: {
-                start: new Date(),
+                start: new Date(Date.now() - millisPerDay),
                 end: new Date(),
                 count: 0
             },
@@ -57,12 +58,16 @@ monitorApp.controller("MonitorCtrl", function($scope, $http) {
         if (data.length === 0) {
             return res;
         }
+        data = data.slice().reverse();
 
         let k = 0;
         let j = 0;
         for (let i = 0; i < data.length; i++) {
-            const start = new Date(data[i].end.getTime() - 5000);
-            const end = new Date(start.getTime() + 86400000);
+            let start = new Date(data[i].end.getTime() - 10000);
+            let end = new Date(start.getTime() + millisPerDay);
+            if (j < i) {
+                j = i;
+            }
             while (j + 1 < data.length && data[j + 1].start < end) {
                 j++;
             }
@@ -71,6 +76,11 @@ monitorApp.controller("MonitorCtrl", function($scope, $http) {
             res.averageCount += count;
 
             if (res.max.count < count) {
+                if (data[j].end < end) {
+                    const hdiff = (end - data[j].end) / 2.0;
+                    start = new Date(start.getTime() - hdiff);
+                    end = new Date(end.getTime() - hdiff);
+                }
                 res.max.count = count;
                 res.max.start = start;
                 res.max.end = end;
