@@ -33,6 +33,7 @@ monitorApp.controller("MonitorCtrl", function($scope, $http) {
                 {
                     ticks: {
                         autoSkipPadding: 60,
+                        minRotation: 90,
                         maxRotation: 90
                     }
                 }
